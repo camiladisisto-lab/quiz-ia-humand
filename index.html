@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diagnóstico de Transparencia IA — Humand</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --h50:  #f1f4fd; --h100: #dee5fb; --h200: #c5d4f8;
+      --h300: #9db8f3; --h400: #6f93eb; --h500: #496be3;
+      --h600: #3851d8; --h700: #2f3fc6; --h800: #2c35a1;
+      --h900: #29317f; --h950: #1d204e;
+      --n50:  #f5f6f8; --n100: #eeeef1; --n150: #e9e9ed;
+      --n200: #dfe0e6; --n300: #cbcdd6; --n400: #b5b6c4;
+      --n500: #aaaaba; --n600: #8d8c9f; --n800: #636271; --n950: #303036;
+      --g50:  #f5fdf6; --g100: #e6fbe9; --g500: #4ed364; --g700: #249637;
+      --y100: #fcf7ce; --y500: #f0b623; --y800: #935214;
+      --r100: #fde3e3; --r500: #e74444; --r700: #b22323;
+      --shadow-4: -1px 4px 8px 0px rgba(233,233,244,1);
+      --shadow-8: -1px 8px 16px 0px rgba(170,170,186,0.45);
+      --text: #303036; --muted: #636271; --bg: #f5f6f8;
+      --brand: #6f93eb; --brand-d: #496be3;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Roboto', sans-serif;
+      font-size: 16px; line-height: 1.4; letter-spacing: 0.2px;
+      color: var(--text); background: var(--bg); min-height: 100vh;
+    }
+
+    /* ── PROGRESS BAR ─────────────────────────────── */
+    #progressBar {
+      position: sticky; top: 0; z-index: 100;
+      background: white; padding: 10px 24px 12px;
+      box-shadow: var(--shadow-4); display: none;
+    }
+    #progressBar.visible { display: block; }
+    .pb-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
+    .pb-label { font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: 0.2px; }
+    .pb-track { height: 6px; background: var(--n200); border-radius: 999px; overflow: hidden; }
+    .pb-fill  { height: 100%; background: var(--brand-d); border-radius: 999px; transition: width .4s ease; }
+
+    /* ── SCREENS ──────────────────────────────────── */
+    .screen { display: none; flex-direction: column; align-items: center; }
+    .screen.active {
+      display: flex;
+      animation: fadeUp .35s ease both;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── BANNER ───────────────────────────────────── */
+    .banner {
+      width: 100%;
+      background: linear-gradient(140deg, var(--h950) 0%, var(--h800) 55%, var(--h500) 100%);
+      padding: 52px 24px 48px; text-align: center;
+      position: relative; overflow: hidden;
+    }
+    .banner::before {
+      content: ''; position: absolute; top: -80px; right: -80px;
+      width: 260px; height: 260px; border-radius: 50%;
+      background: rgba(255,255,255,.05);
+    }
+    .banner::after {
+      content: ''; position: absolute; bottom: -60px; left: -60px;
+      width: 200px; height: 200px; border-radius: 50%;
+      background: rgba(255,255,255,.04);
+    }
+    .banner-logo {
+      font-size: 13px; font-weight: 600; color: rgba(255,255,255,.6);
+      letter-spacing: 2.5px; text-transform: uppercase; margin-bottom: 20px;
+    }
+    .banner-badge {
+      display: inline-block;
+      background: rgba(255,255,255,.14); color: rgba(255,255,255,.92);
+      font-size: 12px; font-weight: 600; letter-spacing: .2px;
+      padding: 4px 14px; border-radius: 999px; margin-bottom: 18px;
+      border: 1px solid rgba(255,255,255,.22);
+    }
+    .banner h1 {
+      font-size: 30px; font-weight: 600; color: #fff;
+      line-height: 1.25; letter-spacing: .2px;
+      max-width: 580px; margin: 0 auto 16px;
+    }
+    .banner-sub {
+      font-size: 16px; color: rgba(255,255,255,.78);
+      max-width: 480px; margin: 0 auto; line-height: 1.65;
+    }
+
+    /* ── MIRROR ───────────────────────────────────── */
+    .mirror-wrap {
+      width: 100%; background: white; padding: 36px 24px;
+      border-bottom: 1px solid var(--n100);
+    }
+    .mirror-title {
+      font-size: 11px; font-weight: 600; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 1.2px;
+      text-align: center; margin-bottom: 16px;
+    }
+    .bubbles {
+      display: flex; flex-wrap: wrap; gap: 8px;
+      justify-content: center; max-width: 580px; margin: 0 auto 24px;
+    }
+    .bubble {
+      background: var(--n50); border: 1px solid var(--n200);
+      border-radius: 999px; padding: 9px 18px;
+      font-size: 14px; color: var(--muted); font-style: italic;
+      white-space: nowrap;
+    }
+    .hook {
+      max-width: 560px; margin: 0 auto; text-align: center;
+      font-size: 16px; color: var(--text); line-height: 1.7;
+    }
+    .hook strong { color: var(--brand-d); font-weight: 600; }
+
+    /* ── START ────────────────────────────────────── */
+    .start-wrap {
+      padding: 36px 24px; width: 100%;
+      display: flex; flex-direction: column; align-items: center; gap: 20px;
+    }
+    .meta {
+      display: flex; gap: 28px; flex-wrap: wrap; justify-content: center;
+    }
+    .meta-item {
+      display: flex; align-items: center; gap: 7px;
+      font-size: 14px; color: var(--muted);
+    }
+    .meta-item svg { flex-shrink: 0; }
+
+    /* ── BUTTONS ──────────────────────────────────── */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      font-family: 'Roboto', sans-serif; font-size: 16px; font-weight: 600;
+      letter-spacing: .2px; border: none; cursor: pointer;
+      border-radius: 8px; transition: background .2s, transform .1s, box-shadow .2s;
+    }
+    .btn-primary {
+      background: var(--brand-d); color: white;
+      padding: 15px 36px; box-shadow: var(--shadow-4);
+    }
+    .btn-primary:hover  { background: var(--h600); transform: translateY(-1px); box-shadow: var(--shadow-8); }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-primary:disabled { opacity: .4; pointer-events: none; }
+    .btn-ghost {
+      background: none; color: var(--muted);
+      padding: 10px 4px; font-size: 14px; font-weight: 400;
+      min-width: 80px;
+    }
+    .btn-ghost:hover { color: var(--text); }
+    .btn-full { width: 100%; }
+
+    /* ── QUIZ ─────────────────────────────────────── */
+    .quiz-wrap {
+      width: 100%; max-width: 680px; padding: 32px 20px; margin: 0 auto;
+    }
+    .q-card {
+      background: white; border-radius: 16px; padding: 36px;
+      box-shadow: var(--shadow-4); margin-bottom: 20px;
+    }
+    .q-block {
+      font-size: 11px; font-weight: 600; color: var(--brand);
+      text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 12px;
+    }
+    .q-text {
+      font-size: 19px; font-weight: 600; color: var(--text);
+      line-height: 1.4; margin-bottom: 28px;
+    }
+    .options { display: flex; flex-direction: column; gap: 10px; }
+    .opt {
+      border: 2px solid var(--n200); border-radius: 10px;
+      padding: 15px 18px; cursor: pointer;
+      display: flex; align-items: center; gap: 12px;
+      font-size: 15px; color: var(--text);
+      background: white; transition: border-color .15s, background .15s;
+      text-align: left; min-height: 54px;
+    }
+    .opt:hover          { border-color: var(--brand); background: var(--h50); }
+    .opt.selected       { border-color: var(--brand-d); background: var(--h50); }
+    .opt-dot {
+      width: 22px; height: 22px; min-width: 22px;
+      border-radius: 50%; border: 2px solid var(--n300);
+      display: flex; align-items: center; justify-content: center;
+      transition: all .15s; flex-shrink: 0;
+    }
+    .opt.selected .opt-dot { background: var(--brand-d); border-color: var(--brand-d); }
+    .opt-dot::after {
+      content: ''; width: 8px; height: 8px; border-radius: 50%;
+      background: white; opacity: 0; transition: opacity .15s;
+    }
+    .opt.selected .opt-dot::after { opacity: 1; }
+    .q-nav {
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 12px;
+    }
+
+    /* ── RESULTS ──────────────────────────────────── */
+    .results-wrap { width: 100%; max-width: 720px; padding: 32px 20px; margin: 0 auto; }
+    .results-head { text-align: center; margin-bottom: 28px; }
+    .results-head h2 { font-size: 24px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+    .results-head p  { font-size: 15px; color: var(--muted); }
+    .area-card {
+      background: white; border-radius: 16px; padding: 22px 24px;
+      box-shadow: var(--shadow-4); margin-bottom: 14px;
+    }
+    .area-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 12px; }
+    .area-name { font-size: 15px; font-weight: 600; color: var(--text); }
+    .badge { font-size: 11px; font-weight: 600; padding: 4px 11px; border-radius: 999px; white-space: nowrap; }
+    .badge-good       { background: var(--g100); color: var(--g700); }
+    .badge-developing { background: var(--y100); color: var(--y800); }
+    .badge-critical   { background: var(--r100); color: var(--r700); }
+    .bar-track { height: 7px; background: var(--n100); border-radius: 999px; margin-bottom: 12px; overflow: hidden; }
+    .bar-fill  { height: 100%; border-radius: 999px; transition: width .7s ease; }
+    .fill-good       { background: var(--g500); }
+    .fill-developing { background: var(--y500); }
+    .fill-critical   { background: var(--r500); }
+    .area-text { font-size: 14px; color: var(--muted); line-height: 1.6; }
+    .results-cta { text-align: center; margin-top: 28px; }
+    .results-cta-sub { font-size: 12px; color: var(--n500); margin-top: 8px; }
+
+    /* ── EMAIL ────────────────────────────────────── */
+    .email-wrap { width: 100%; max-width: 500px; padding: 48px 20px; margin: 0 auto; }
+    .email-card {
+      background: white; border-radius: 16px; padding: 40px 32px;
+      box-shadow: var(--shadow-8); text-align: center;
+    }
+    .email-icon {
+      width: 56px; height: 56px; background: var(--h50); border-radius: 16px;
+      margin: 0 auto 20px; display: flex; align-items: center; justify-content: center;
+    }
+    .email-card h2 { font-size: 22px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+    .email-card .sub { font-size: 14px; color: var(--muted); margin-bottom: 20px; line-height: 1.6; }
+    .features { display: flex; flex-direction: column; gap: 9px; margin-bottom: 24px; text-align: left; }
+    .feat { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--muted); }
+    .feat-dot {
+      width: 20px; height: 20px; min-width: 20px; background: var(--g100);
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; text-align: left; }
+    .field label { font-size: 14px; font-weight: 600; color: var(--text); }
+    .field label span { font-weight: 400; color: var(--muted); font-size: 13px; }
+    .field input {
+      border: 1.5px solid var(--n200); border-radius: 8px; padding: 13px 14px;
+      font-size: 15px; font-family: 'Roboto', sans-serif; color: var(--text);
+      outline: none; transition: border-color .15s; width: 100%;
+    }
+    .field input:focus { border-color: var(--brand-d); }
+    .field input.error { border-color: var(--r500); }
+    .email-fine { font-size: 12px; color: var(--n500); margin-top: 10px; line-height: 1.5; }
+
+    /* ── THANK YOU ────────────────────────────────── */
+    .ty-wrap { width: 100%; max-width: 500px; padding: 48px 20px; margin: 0 auto; }
+    .ty-card {
+      background: white; border-radius: 16px; padding: 48px 32px;
+      box-shadow: var(--shadow-8); text-align: center;
+    }
+    .ty-icon {
+      width: 64px; height: 64px; background: var(--g100); border-radius: 50%;
+      margin: 0 auto 24px; display: flex; align-items: center; justify-content: center;
+    }
+    .ty-card h2 { font-size: 24px; font-weight: 600; color: var(--text); margin-bottom: 10px; }
+    .ty-card p { font-size: 15px; color: var(--muted); line-height: 1.6; }
+    .ty-email { font-weight: 600; color: var(--brand-d); }
+    .ty-divider { height: 1px; background: var(--n100); margin: 28px 0; }
+    .ty-cta-label {
+      font-size: 11px; font-weight: 600; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 10px;
+    }
+    .ty-cta-desc { font-size: 14px; color: var(--muted); margin-bottom: 20px; line-height: 1.6; }
+    .ty-fine { font-size: 12px; color: var(--n500); margin-top: 8px; }
+
+    /* ── RESPONSIVE MOBILE ────────────────────────── */
+    @media (max-width: 600px) {
+      .banner { padding: 40px 20px 36px; }
+      .banner h1 { font-size: 23px; }
+      .banner-sub { font-size: 15px; }
+      .bubble { font-size: 13px; padding: 8px 14px; white-space: normal; }
+      .hook { font-size: 15px; }
+      .q-card { padding: 24px 16px; }
+      .q-text { font-size: 17px; }
+      .opt { padding: 14px 14px; min-height: 56px; font-size: 14px; }
+      .q-nav { padding: 0 4px; }
+      .btn-ghost { padding: 12px 0; font-size: 14px; }
+      .btn-primary { padding: 14px 28px; font-size: 15px; }
+      .email-card, .ty-card { padding: 32px 20px; }
+      .email-card h2 { font-size: 20px; }
+      .area-head { flex-direction: column; align-items: flex-start; gap: 6px; }
+    }
+
+    /* ── DESKTOP ENHANCEMENTS ─────────────────────── */
+    @media (min-width: 900px) {
+      .banner h1 { font-size: 34px; }
+      .quiz-wrap  { padding: 40px 20px; }
+      .q-card     { padding: 40px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── PROGRESS BAR ─────────────────────────── -->
+<div id="progressBar">
+  <div class="pb-row">
+    <span class="pb-label" id="pbLabel">Pregunta 1</span>
+    <span class="pb-label" id="pbPct">0%</span>
+  </div>
+  <div class="pb-track"><div class="pb-fill" id="pbFill" style="width:0%"></div></div>
+</div>
+
+<!-- ── SCREEN: INTRO ────────────────────────── -->
+<div class="screen active" id="screen-intro">
+  <div class="banner">
+    <div class="banner-logo">Humand</div>
+    <div class="banner-badge">EU AI Act · Deadline agosto 2026</div>
+    <h1>¿Tu organización puede demostrar transparencia en el uso de IA?</h1>
+    <p class="banner-sub">Descubre qué aspectos de transparencia podría estar pasando por alto — y si hoy podrías demostrarlo ante una inspección.</p>
+  </div>
+
+  <div class="mirror-wrap">
+    <div class="mirror-title">¿Te suena familiar?</div>
+    <div class="bubbles">
+      <div class="bubble">"Ya les avisamos por mail…"</div>
+      <div class="bubble">"Eso lo gestiona el proveedor"</div>
+      <div class="bubble">"Está en la intranet, creo"</div>
+      <div class="bubble">"En septiembre lo revisamos"</div>
+    </div>
+    <p class="hook">
+      Legal ya está preguntando. Los auditores llegarán. Y cuando lleguen, no van a preguntar si usas IA —
+      van a preguntar si tus empleados lo saben, si firmaron algo, si hay registros.
+      <strong>¿Hoy puedes responder esas preguntas?</strong>
+    </p>
+  </div>
+
+  <div class="start-wrap">
+    <div class="meta">
+      <div class="meta-item">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <circle cx="8" cy="8" r="6.5" stroke="#6f93eb" stroke-width="1.4"/>
+          <path d="M8 4.5V8.2l2.2 2.2" stroke="#6f93eb" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+        4 minutos
+      </div>
+      <div class="meta-item">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M8 2l1.6 3.3L13 5.9l-2.5 2.5.6 3.6L8 10.4l-3.1 1.6.6-3.6L3 5.9l3.4-.6z"
+                stroke="#6f93eb" stroke-width="1.4" stroke-linejoin="round"/>
+        </svg>
+        Diagnóstico personalizado
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="startQuiz()">Comenzar diagnóstico →</button>
+  </div>
+</div>
+
+<!-- ── SCREEN: QUIZ ──────────────────────────── -->
+<div class="screen" id="screen-quiz">
+  <div class="quiz-wrap">
+    <div class="q-card">
+      <div class="q-block" id="qBlock"></div>
+      <div class="q-text"  id="qText"></div>
+      <div class="options"  id="qOptions"></div>
+    </div>
+    <div class="q-nav">
+      <button class="btn btn-ghost" id="btnBack" onclick="prevQ()">← Anterior</button>
+      <button class="btn btn-primary" id="btnNext" onclick="nextQ()" disabled>Siguiente →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── SCREEN: RESULTS ──────────────────────── -->
+<div class="screen" id="screen-results">
+  <div class="results-wrap">
+    <div class="results-head">
+      <h2>Tu diagnóstico de transparencia IA</h2>
+      <p>Identificamos estas áreas de oportunidad basándonos en tus respuestas</p>
+    </div>
+    <div id="resultsContent"></div>
+    <div class="results-cta">
+      <button class="btn btn-primary" onclick="goEmail()">Recibir mi roadmap →</button>
+      <p class="results-cta-sub">Plan de acción en 5 fases para estar listo antes de agosto 2026</p>
+    </div>
+  </div>
+</div>
+
+<!-- ── SCREEN: EMAIL ─────────────────────────── -->
+<div class="screen" id="screen-email">
+  <div class="email-wrap">
+    <div class="email-card">
+      <div class="email-icon">
+        <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+          <path d="M3 7l10 7 10-7" stroke="#496be3" stroke-width="1.7" stroke-linecap="round"/>
+          <rect x="2" y="5" width="22" height="16" rx="2" stroke="#496be3" stroke-width="1.7"/>
+        </svg>
+      </div>
+      <h2>Recibe tu roadmap de cumplimiento</h2>
+      <p class="sub">Un plan concreto en 5 fases para que tu organización esté lista antes del deadline regulatorio.</p>
+      <div class="features">
+        <div class="feat">
+          <div class="feat-dot">
+            <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+              <path d="M1 4l3 3 5-6" stroke="#249637" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          5 fases con acciones concretas y plazos
+        </div>
+        <div class="feat">
+          <div class="feat-dot">
+            <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+              <path d="M1 4l3 3 5-6" stroke="#249637" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          Responsables sugeridos por acción (RRHH / Comms / Legal)
+        </div>
+        <div class="feat">
+          <div class="feat-dot">
+            <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+              <path d="M1 4l3 3 5-6" stroke="#249637" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          Criterios mínimos de cumplimiento por fase
+        </div>
+      </div>
+      <div id="emailForm">
+        <div class="field">
+          <label for="iName">Nombre</label>
+          <input type="text" id="iName" placeholder="Tu nombre">
+        </div>
+        <div class="field">
+          <label for="iEmpresa">Empresa <span>(opcional)</span></label>
+          <input type="text" id="iEmpresa" placeholder="Nombre de tu empresa">
+        </div>
+        <div class="field">
+          <label for="iEmail">Correo corporativo</label>
+          <input type="email" id="iEmail" placeholder="nombre@empresa.com">
+        </div>
+      </div>
+      <button class="btn btn-primary btn-full" style="margin-top:8px" onclick="submitEmail()">
+        Recibir mi roadmap
+      </button>
+      <p class="email-fine">Sin spam. Solo el roadmap y recursos relevantes sobre el AI Act.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ── SCREEN: THANK YOU ─────────────────────── -->
+<div class="screen" id="screen-thankyou">
+  <div class="ty-wrap">
+    <div class="ty-card">
+      <div class="ty-icon">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+          <path d="M5 14l6 6 12-11" stroke="#249637" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h2>¡Listo! Revisa tu correo</h2>
+      <p>Te enviamos el roadmap a <span class="ty-email" id="tyEmail"></span></p>
+      <p style="margin-top:8px">En el correo también encontrarás tu diagnóstico completo para compartir con tu equipo.</p>
+      <div class="ty-divider"></div>
+      <div class="ty-cta-label">¿Quieres ver cómo Humand lo resuelve?</div>
+      <p class="ty-cta-desc">Descubre cómo comunicar políticas, cambios y uso de IA a toda tu plantilla desde una única plataforma — sin importar si trabajan en oficina, en planta o sin correo corporativo.</p>
+      <button class="btn btn-primary btn-full" onclick="window.open('https://humand.co/es/contactanos/','_blank')">
+        Solicitar demo gratuita
+      </button>
+      <p class="ty-fine">Sin compromisos · 30 minutos · Con un especialista</p>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════ DATA ══════════════════════════ */
+const QUESTIONS = [
+  /* Bloque 1 — Inventario */
+  {
+    block: "Bloque 1 · Inventario de herramientas",
+    key: "inventario",
+    q: "¿La organización tiene identificadas todas las herramientas de IA en uso, incluidas las gratuitas o adoptadas individualmente por empleados?",
+    opts: [
+      { t: "Sí, tenemos un inventario actualizado", v: 2 },
+      { t: "Lo estamos construyendo", v: 1 },
+      { t: "No contamos con ese inventario", v: 0 }
+    ]
+  },
+  {
+    block: "Bloque 1 · Inventario de herramientas",
+    key: "inventario",
+    q: "¿Saben qué nivel de riesgo regulatorio representa cada herramienta? (mínimo, moderado, alto)",
+    opts: [
+      { t: "Sí, tenemos esa clasificación", v: 2 },
+      { t: "Parcialmente", v: 1 },
+      { t: "No lo hemos evaluado", v: 0 }
+    ]
+  },
+  /* Bloque 2 — Formación */
+  {
+    block: "Bloque 2 · Formación y alfabetización IA",
+    key: "formacion",
+    q: "¿La organización cuenta con un programa documentado de formación en IA para su plantilla?",
+    opts: [
+      { t: "Sí, documentado y activo", v: 2 },
+      { t: "Estamos diseñándolo", v: 1 },
+      { t: "No tenemos programa formal", v: 0 }
+    ]
+  },
+  {
+    block: "Bloque 2 · Formación y alfabetización IA",
+    key: "formacion",
+    q: "¿Existe un registro nominal que demuestre quién completó la formación en IA y cuándo?",
+    opts: [
+      { t: "Sí, con registros por persona", v: 2 },
+      { t: "Registro parcial o informal", v: 1 },
+      { t: "No llevamos ese registro", v: 0 }
+    ]
+  },
+  /* Bloque 3 — Transparencia */
+  {
+    block: "Bloque 3 · Transparencia interna",
+    key: "transparencia",
+    q: "¿Los empleados saben en qué procesos de su día a día interviene la IA?",
+    opts: [
+      { t: "Sí, lo comunicamos explícitamente", v: 2 },
+      { t: "Algunos lo saben, no todos", v: 1 },
+      { t: "No hemos comunicado eso formalmente", v: 0 }
+    ]
+  },
+  {
+    block: "Bloque 3 · Transparencia interna",
+    key: "transparencia",
+    q: "¿Existe una política de uso responsable de IA accesible para toda la plantilla?",
+    opts: [
+      { t: "Sí, publicada y accesible", v: 2 },
+      { t: "En borrador o acceso limitado", v: 1 },
+      { t: "No tenemos esa política", v: 0 }
+    ]
+  },
+  /* Bloque 4 — Trazabilidad */
+  {
+    block: "Bloque 4 · Trazabilidad y documentación",
+    key: "trazabilidad",
+    q: "¿Puede demostrarse con registros concretos que las comunicaciones sobre IA llegaron a todos los empleados?",
+    opts: [
+      { t: "Sí, tenemos confirmaciones de recepción", v: 2 },
+      { t: "Enviamos, pero sin confirmar recepción", v: 1 },
+      { t: "No podríamos demostrarlo", v: 0 }
+    ]
+  },
+  /* Bloque 5 — Gobernanza */
+  {
+    block: "Bloque 5 · Gobernanza",
+    key: "gobernanza",
+    q: "¿Hay un responsable o equipo designado para gestionar el cumplimiento de la Ley de IA?",
+    opts: [
+      { t: "Sí, con rol formalmente definido", v: 2 },
+      { t: "Está en proceso de definirse", v: 1 },
+      { t: "No hay nadie designado", v: 0 }
+    ]
+  },
+  {
+    block: "Bloque 5 · Gobernanza",
+    key: "gobernanza",
+    q: "¿Existe revisión humana de las decisiones automatizadas que afectan a empleados (turnos, evaluación, selección)?",
+    opts: [
+      { t: "Sí, siempre hay validación humana", v: 2 },
+      { t: "En algunos casos", v: 1 },
+      { t: "Las decisiones son totalmente automatizadas", v: 0 }
+    ]
+  }
+];
+
+const DIAG = {
+  inventario: {
+    name: "Inventario de herramientas",
+    good:       "Tu organización tiene visibilidad sobre las herramientas de IA en uso y su nivel de riesgo regulatorio. Mantén ese inventario actualizado a medida que incorpores nuevas herramientas.",
+    developing: "El inventario está en construcción, pero hay gaps. Sin una clasificación completa de herramientas y su riesgo, es difícil saber qué obligaciones aplican en cada caso.",
+    critical:   "La organización no tiene un mapa claro de las herramientas de IA en uso ni de su nivel de riesgo. Sin este punto de partida, no es posible gestionar lo que no se conoce."
+  },
+  formacion: {
+    name: "Formación y alfabetización IA",
+    good:       "La organización cuenta con un programa documentado y registros que acreditan quién fue formado y cuándo. Eso es exactamente lo que exige el Artículo 4 — vigente desde febrero 2025.",
+    developing: "Hay conciencia sobre la necesidad de formación, pero los registros nominales son incompletos. Sin evidencia por persona, no es posible superar una inspección.",
+    critical:   "El Artículo 4 exige alfabetización en IA para todos los empleados, sin excepciones ni prórrogas. La ausencia de un programa documentado y registros nominales representa el mayor riesgo de cumplimiento actual."
+  },
+  transparencia: {
+    name: "Transparencia interna",
+    good:       "Los empleados están informados sobre el uso de IA y existe una política accesible. La transparencia activa es uno de los pilares más valorados ante una auditoría.",
+    developing: "Hay iniciativas, pero la cobertura no es total. Especialmente entre perfiles operativos, la información puede no estar llegando de forma consistente.",
+    critical:   "La información sobre el uso de IA no llega a los empleados de forma sistemática. Esto implica tanto un riesgo regulatorio como un problema de confianza organizacional."
+  },
+  trazabilidad: {
+    name: "Trazabilidad y documentación",
+    good:       "La organización puede demostrar con registros concretos que sus comunicaciones llegaron. Eso es lo que distingue el cumplimiento real del cumplimiento declarado.",
+    developing: "Se comunica, pero sin evidencia de recepción. Ante una inspección, 'enviamos un mail' no es suficiente sin registros que lo demuestren.",
+    critical:   "La organización no puede demostrar que sus comunicaciones sobre IA llegaron a cada empleado. Ante un auditor, eso equivale a no haber comunicado. Es la brecha más difícil de cerrar sin la infraestructura adecuada."
+  },
+  gobernanza: {
+    name: "Gobernanza",
+    good:       "Existe un responsable claro y revisión humana de decisiones automatizadas. Esa estructura es la que permite escalar el cumplimiento con consistencia.",
+    developing: "La gobernanza está tomando forma, pero sin un responsable definitivo ni procesos claros de revisión, el cumplimiento depende de voluntad individual más que de estructura.",
+    critical:   "Sin un responsable designado ni revisión humana de decisiones automatizadas, la organización opera sin red de seguridad — especialmente crítico para sistemas de alto riesgo que afectan a empleados."
+  }
+};
+
+const BLOCK_ORDER = ["inventario", "formacion", "transparencia", "trazabilidad", "gobernanza"];
+
+/* ══════════════════ STATE ═════════════════════════ */
+let curQ    = 0;
+let answers = new Array(QUESTIONS.length).fill(null);
+
+/* ══════════════════ HELPERS ═══════════════════════ */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function updateProgress() {
+  const total = QUESTIONS.length;
+  const pct   = Math.round((curQ / total) * 100);
+  document.getElementById('pbFill').style.width  = pct + '%';
+  document.getElementById('pbLabel').textContent = `Pregunta ${curQ + 1} de ${total}`;
+  document.getElementById('pbPct').textContent   = pct + '%';
+}
+
+/* ══════════════════ QUIZ ══════════════════════════ */
+function startQuiz() {
+  curQ    = 0;
+  answers = new Array(QUESTIONS.length).fill(null);
+  document.getElementById('progressBar').classList.add('visible');
+  renderQ();
+  showScreen('quiz');
+}
+
+function renderQ() {
+  const q = QUESTIONS[curQ];
+  document.getElementById('qBlock').textContent = q.block;
+  document.getElementById('qText').textContent  = q.q;
+
+  const container = document.getElementById('qOptions');
+  container.innerHTML = '';
+  q.opts.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'opt' + (answers[curQ] === i ? ' selected' : '');
+    btn.onclick = () => pick(i);
+    btn.innerHTML = `<div class="opt-dot"></div><span>${opt.t}</span>`;
+    container.appendChild(btn);
+  });
+
+  const btnBack = document.getElementById('btnBack');
+  const btnNext = document.getElementById('btnNext');
+  btnBack.style.visibility = curQ === 0 ? 'hidden' : 'visible';
+  const isLast = curQ === QUESTIONS.length - 1;
+  btnNext.textContent = isLast ? 'Ver mi diagnóstico →' : 'Siguiente →';
+  btnNext.disabled = answers[curQ] === null;
+
+  updateProgress();
+}
+
+function pick(i) {
+  answers[curQ] = i;
+  document.querySelectorAll('.opt').forEach((el, idx) =>
+    el.classList.toggle('selected', idx === i));
+  document.getElementById('btnNext').disabled = false;
+}
+
+function nextQ() {
+  if (answers[curQ] === null) return;
+  if (curQ < QUESTIONS.length - 1) { curQ++; renderQ(); }
+  else showResults();
+}
+
+function prevQ() {
+  if (curQ > 0) { curQ--; renderQ(); }
+}
+
+/* ══════════════════ RESULTS ═══════════════════════ */
+function computeScores() {
+  const scores = {}, maxes = {};
+  QUESTIONS.forEach((q, i) => {
+    scores[q.key] = (scores[q.key] || 0) + (answers[i] !== null ? q.opts[answers[i]].v : 0);
+    maxes[q.key]  = (maxes[q.key]  || 0) + Math.max(...q.opts.map(o => o.v));
+  });
+  return { scores, maxes };
+}
+
+function level(score, max) {
+  const p = max ? (score / max) * 100 : 0;
+  return p >= 67 ? 'good' : p >= 34 ? 'developing' : 'critical';
+}
+
+const LEVEL_LABEL = { good: 'Bien encaminado', developing: 'En desarrollo', critical: 'Área crítica' };
+
+function showResults() {
+  document.getElementById('pbFill').style.width  = '100%';
+  document.getElementById('pbLabel').textContent = 'Diagnóstico completado';
+  document.getElementById('pbPct').textContent   = '100%';
+
+  const { scores, maxes } = computeScores();
+  const wrap = document.getElementById('resultsContent');
+  wrap.innerHTML = '';
+
+  BLOCK_ORDER.forEach(key => {
+    const s   = scores[key] || 0;
+    const m   = maxes[key]  || 1;
+    const pct = Math.round((s / m) * 100);
+    const lv  = level(s, m);
+    const d   = DIAG[key];
+
+    const card = document.createElement('div');
+    card.className = 'area-card';
+    card.innerHTML = `
+      <div class="area-head">
+        <span class="area-name">${d.name}</span>
+        <span class="badge badge-${lv}">${LEVEL_LABEL[lv]}</span>
+      </div>
+      <div class="bar-track"><div class="bar-fill fill-${lv}" style="width:0%"></div></div>
+      <p class="area-text">${d[lv]}</p>
+    `;
+    wrap.appendChild(card);
+
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      card.querySelector('.bar-fill').style.width = pct + '%';
+    }));
+  });
+
+  showScreen('results');
+}
+
+/* ══════════════════ EMAIL FLOW ════════════════════ */
+const ROADMAP_TEXT = `
+ROADMAP DE CUMPLIMIENTO — EU AI ACT
+Humand · humand.co
+
+─────────────────────────────────────
+FASE 1 — Inventario (semanas 1–2)
+─────────────────────────────────────
+□ Mapear todas las herramientas de IA en uso, incluidas las adoptadas individualmente
+□ Clasificar cada herramienta por nivel de riesgo (mínimo / moderado / alto) según AI Act
+□ Identificar cuáles afectan decisiones sobre personas (contratación, turnos, evaluación, nómina)
+Responsable sugerido: RRHH + IT
+
+─────────────────────────────────────
+FASE 2 — Política interna (semanas 3–4)
+─────────────────────────────────────
+□ Redactar o actualizar la política de uso responsable de IA
+□ Definir responsable de gobernanza de IA (o equipo)
+□ Revisar contratos con proveedores: incluir cláusulas de cumplimiento AI Act
+Responsable sugerido: Legal + RRHH
+
+─────────────────────────────────────
+FASE 3 — Comunicación a la plantilla (semanas 5–6)
+─────────────────────────────────────
+□ Definir qué comunicar, a quién y en qué formato según perfil de empleado
+□ Garantizar cobertura total: operativos, turnos, empleados sin correo corporativo
+□ Usar un canal que permita confirmar recepción por persona
+Responsable sugerido: Comunicación Interna + RRHH
+
+─────────────────────────────────────
+FASE 4 — Formación (semanas 7–8)
+─────────────────────────────────────
+□ Diseñar programa de alfabetización en IA (Artículo 4 — vigente sin prórroga desde feb 2025)
+□ Asegurar que llega a todos los empleados, no solo mandos medios
+□ Generar registro nominal: quién completó la formación y cuándo
+Responsable sugerido: RRHH + Formación
+
+─────────────────────────────────────
+FASE 5 — Trazabilidad y auditoría (ongoing)
+─────────────────────────────────────
+□ Centralizar políticas, guías y comunicaciones en un repositorio único
+□ Mantener logs de recepción y confirmaciones de lectura por empleado
+□ Definir ciclo de revisión anual de políticas y herramientas
+Responsable sugerido: RRHH + Legal
+
+─────────────────────────────────────
+Las fases 3, 4 y 5 requieren demostrar con registros concretos que la información llegó a cada empleado. Herramientas como Humand están diseñadas para exactamente eso.
+
+¿Quieres ver cómo funciona?
+→ humand.co/es/contactanos/
+`;
+
+function goEmail() {
+  const storedEmail  = localStorage.getItem('humand_email');
+  const storedName   = localStorage.getItem('humand_name');
+  const storedEmpresa = localStorage.getItem('humand_empresa');
+  if (storedEmail)   document.getElementById('iEmail').value   = storedEmail;
+  if (storedName)    document.getElementById('iName').value    = storedName;
+  if (storedEmpresa) document.getElementById('iEmpresa').value = storedEmpresa;
+  showScreen('email');
+}
+
+async function submitEmail() {
+  const emailEl   = document.getElementById('iEmail');
+  const nameEl    = document.getElementById('iName');
+  const empresaEl = document.getElementById('iEmpresa');
+  const email     = emailEl.value.trim();
+  const name      = nameEl.value.trim();
+  const empresa   = empresaEl.value.trim();
+  const btnSend   = document.querySelector('#screen-email .btn-primary');
+
+  emailEl.classList.remove('error');
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    emailEl.classList.add('error');
+    emailEl.focus();
+    return;
+  }
+
+  localStorage.setItem('humand_email',   email);
+  localStorage.setItem('humand_name',    name);
+  localStorage.setItem('humand_empresa', empresa);
+
+  btnSend.disabled = true;
+  btnSend.textContent = 'Enviando…';
+
+  try {
+    await fetch('https://formsubmit.co/ajax/camila.disisto@humand.co', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({
+        _subject: `Roadmap EU AI Act — ${name || email}`,
+        nombre:   name    || '(no indicado)',
+        empresa:  empresa || '(no indicada)',
+        email:    email,
+        roadmap:  ROADMAP_TEXT,
+        _template: 'table'
+      })
+    });
+  } catch (e) {
+    console.warn('Email send failed:', e);
+  }
+
+  btnSend.disabled = false;
+  btnSend.textContent = 'Recibir mi roadmap';
+  finalStep(email);
+}
+
+function finalStep(email) {
+  document.getElementById('tyEmail').textContent = email;
+  showScreen('thankyou');
+}
+</script>
+</body>
+</html>
