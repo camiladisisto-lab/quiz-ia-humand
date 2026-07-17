@@ -426,15 +426,15 @@
       <div id="customForm">
         <div class="field">
           <label for="iNombre">Nombre</label>
-          <input type="text" id="iNombre" placeholder="Tu nombre">
+          <input type="text" id="iNombre" placeholder="Tu nombre" autocomplete="given-name">
         </div>
         <div class="field">
           <label for="iEmpresa">Empresa <span style="color:var(--r500);font-size:13px">*</span></label>
-          <input type="text" id="iEmpresa" placeholder="Nombre de tu empresa">
+          <input type="text" id="iEmpresa" placeholder="Nombre de tu empresa" autocomplete="organization">
         </div>
         <div class="field">
           <label for="iEmail">Correo corporativo <span style="color:var(--r500);font-size:13px">*</span></label>
-          <input type="email" id="iEmail" placeholder="nombre@empresa.com">
+          <input type="email" id="iEmail" placeholder="nombre@empresa.com" autocomplete="email">
         </div>
         <button class="btn btn-primary btn-full" style="margin-top:8px" id="btnCapture" onclick="submitCapture()">
           Ver mi diagnóstico →
