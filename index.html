@@ -380,68 +380,67 @@
     </div>
     <div id="resultsContent"></div>
     <div class="results-cta">
-      <button class="btn btn-primary" onclick="goEmail()">Recibir mi roadmap →</button>
-      <p class="results-cta-sub">Plan de acción en 5 fases para estar listo antes de agosto 2026</p>
+      <div id="resultsRoadmapNote"></div>
+      <button class="btn btn-primary" onclick="showScreen('thankyou')">Descubrir cómo Humand lo resuelve →</button>
+      <p class="results-cta-sub">Comunicación, formación y trazabilidad para toda la plantilla</p>
     </div>
   </div>
 </div>
 
-<!-- ── SCREEN: EMAIL ─────────────────────────── -->
-<div class="screen" id="screen-email">
+<!-- ── SCREEN: CAPTURE ────────────────────────── -->
+<div class="screen" id="screen-capture">
   <div class="email-wrap">
     <div class="email-card">
       <div class="email-icon">
         <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
-          <path d="M3 7l10 7 10-7" stroke="#496be3" stroke-width="1.7" stroke-linecap="round"/>
-          <rect x="2" y="5" width="22" height="16" rx="2" stroke="#496be3" stroke-width="1.7"/>
+          <circle cx="13" cy="13" r="11" stroke="#496be3" stroke-width="1.7"/>
+          <path d="M8.5 13l3.5 3.5 6-6" stroke="#496be3" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </div>
-      <h2>Recibe tu roadmap de cumplimiento</h2>
-      <p class="sub">Un plan concreto en 5 fases para que tu organización esté lista antes del deadline regulatorio.</p>
-      <div class="features">
-        <div class="feat">
-          <div class="feat-dot">
-            <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-              <path d="M1 4l3 3 5-6" stroke="#249637" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </div>
-          5 fases con acciones concretas y plazos
-        </div>
-        <div class="feat">
-          <div class="feat-dot">
-            <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-              <path d="M1 4l3 3 5-6" stroke="#249637" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </div>
-          Responsables sugeridos por acción (RRHH / Comms / Legal)
-        </div>
-        <div class="feat">
-          <div class="feat-dot">
-            <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-              <path d="M1 4l3 3 5-6" stroke="#249637" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </div>
-          Criterios mínimos de cumplimiento por fase
-        </div>
-      </div>
-      <div id="emailForm">
+      <h2>Tu diagnóstico está listo</h2>
+      <p class="sub">Déjanos tu correo para acceder al diagnóstico y recibir el roadmap de cumplimiento en 5 fases.</p>
+
+      <!--
+      ════════════════════════════════════════════════════
+      INTEGRACIÓN HUBSPOT
+      Cuando tengas el portalId y formId, reemplaza el
+      bloque <div id="customForm"> con lo siguiente:
+
+      <div id="hubspotForm"></div>
+      <script charset="utf-8" type="text/javascript"
+        src="//js.hsforms.net/forms/embed/v2.js"></script>
+      <script>
+        hbspt.forms.create({
+          portalId: "TU_PORTAL_ID",
+          formId:   "TU_FORM_ID",
+          target:   "#hubspotForm",
+          onFormSubmitted: function() { afterCapture(); }
+        });
+      </script>
+
+      Asegúrate de que el formulario de HubSpot incluya
+      los campos: nombre, empresa (obligatorio), email.
+      ════════════════════════════════════════════════════
+      -->
+
+      <div id="customForm">
         <div class="field">
-          <label for="iName">Nombre</label>
-          <input type="text" id="iName" placeholder="Tu nombre">
+          <label for="iNombre">Nombre</label>
+          <input type="text" id="iNombre" placeholder="Tu nombre">
         </div>
         <div class="field">
-          <label for="iEmpresa">Empresa <span>(opcional)</span></label>
+          <label for="iEmpresa">Empresa <span style="color:var(--r500);font-size:13px">*</span></label>
           <input type="text" id="iEmpresa" placeholder="Nombre de tu empresa">
         </div>
         <div class="field">
-          <label for="iEmail">Correo corporativo</label>
+          <label for="iEmail">Correo corporativo <span style="color:var(--r500);font-size:13px">*</span></label>
           <input type="email" id="iEmail" placeholder="nombre@empresa.com">
         </div>
+        <button class="btn btn-primary btn-full" style="margin-top:8px" id="btnCapture" onclick="submitCapture()">
+          Ver mi diagnóstico →
+        </button>
+        <p class="email-fine">Sin spam. Solo el roadmap y actualizaciones sobre el AI Act.</p>
       </div>
-      <button class="btn btn-primary btn-full" style="margin-top:8px" onclick="submitEmail()">
-        Recibir mi roadmap
-      </button>
-      <p class="email-fine">Sin spam. Solo el roadmap y recursos relevantes sobre el AI Act.</p>
     </div>
   </div>
 </div>
@@ -452,15 +451,14 @@
     <div class="ty-card">
       <div class="ty-icon">
         <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-          <path d="M5 14l6 6 12-11" stroke="#249637" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="14" cy="14" r="12" stroke="#4ed364" stroke-width="1.8"/>
+          <path d="M8.5 14l4 4 7-7" stroke="#249637" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </div>
-      <h2>¡Listo! Revisa tu correo</h2>
-      <p>Te enviamos el roadmap a <span class="ty-email" id="tyEmail"></span></p>
-      <p style="margin-top:8px">En el correo también encontrarás tu diagnóstico completo para compartir con tu equipo.</p>
+      <h2>¿Cómo puede ayudarte Humand?</h2>
+      <p>Las fases 3, 4 y 5 del roadmap exigen algo que la mayoría de herramientas no resuelve: llegar a todos los empleados, incluidos quienes no tienen correo corporativo, y conservar registros nominales que soporten una inspección.</p>
       <div class="ty-divider"></div>
-      <div class="ty-cta-label">¿Quieres ver cómo Humand lo resuelve?</div>
-      <p class="ty-cta-desc">Descubre cómo comunicar políticas, cambios y uso de IA a toda tu plantilla desde una única plataforma — sin importar si trabajan en oficina, en planta o sin correo corporativo.</p>
+      <p class="ty-cta-desc">Humand conecta comunicación interna, formación y trazabilidad en una única plataforma, accesible desde el móvil de cada empleado.</p>
       <button class="btn btn-primary btn-full" onclick="window.open('https://humand.co/es/contactanos/','_blank')">
         Solicitar demo gratuita
       </button>
@@ -667,7 +665,7 @@ function pick(i) {
 function nextQ() {
   if (answers[curQ] === null) return;
   if (curQ < QUESTIONS.length - 1) { curQ++; renderQ(); }
-  else showResults();
+  else goCapture();
 }
 
 function prevQ() {
@@ -779,64 +777,82 @@ Las fases 3, 4 y 5 requieren demostrar con registros concretos que la informaci�
 → humand.co/es/contactanos/
 `;
 
-function goEmail() {
-  const storedEmail  = localStorage.getItem('humand_email');
-  const storedName   = localStorage.getItem('humand_name');
+/* ══════════════════ CAPTURE FLOW ══════════════════ */
+function goCapture() {
+  // Pre-rellenar con datos previos si existen
+  const storedNombre  = localStorage.getItem('humand_nombre');
   const storedEmpresa = localStorage.getItem('humand_empresa');
-  if (storedEmail)   document.getElementById('iEmail').value   = storedEmail;
-  if (storedName)    document.getElementById('iName').value    = storedName;
-  if (storedEmpresa) document.getElementById('iEmpresa').value = storedEmpresa;
-  showScreen('email');
+  const storedEmail   = localStorage.getItem('humand_email');
+  if (storedNombre)   document.getElementById('iNombre').value   = storedNombre;
+  if (storedEmpresa)  document.getElementById('iEmpresa').value  = storedEmpresa;
+  if (storedEmail)    document.getElementById('iEmail').value    = storedEmail;
+
+  // Progress al 100% al terminar el quiz
+  document.getElementById('pbFill').style.width  = '100%';
+  document.getElementById('pbLabel').textContent = 'Diagnóstico completado';
+  document.getElementById('pbPct').textContent   = '100%';
+
+  showScreen('capture');
 }
 
-async function submitEmail() {
-  const emailEl   = document.getElementById('iEmail');
-  const nameEl    = document.getElementById('iName');
+async function submitCapture() {
+  const nombreEl  = document.getElementById('iNombre');
   const empresaEl = document.getElementById('iEmpresa');
-  const email     = emailEl.value.trim();
-  const name      = nameEl.value.trim();
+  const emailEl   = document.getElementById('iEmail');
+  const nombre    = nombreEl.value.trim();
   const empresa   = empresaEl.value.trim();
-  const btnSend   = document.querySelector('#screen-email .btn-primary');
+  const email     = emailEl.value.trim();
+  const btn       = document.getElementById('btnCapture');
 
+  // Validación — empresa y email obligatorios
   emailEl.classList.remove('error');
+  empresaEl.classList.remove('error');
+  let valid = true;
+  if (!empresa) {
+    empresaEl.classList.add('error'); empresaEl.focus(); valid = false;
+  }
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    emailEl.classList.add('error');
-    emailEl.focus();
-    return;
+    emailEl.classList.add('error'); if (valid) emailEl.focus(); valid = false;
   }
+  if (!valid) return;
 
-  localStorage.setItem('humand_email',   email);
-  localStorage.setItem('humand_name',    name);
+  localStorage.setItem('humand_nombre',  nombre);
   localStorage.setItem('humand_empresa', empresa);
+  localStorage.setItem('humand_email',   email);
 
-  btnSend.disabled = true;
-  btnSend.textContent = 'Enviando…';
+  btn.disabled = true;
+  btn.textContent = 'Cargando diagnóstico…';
 
-  try {
-    await fetch('https://formsubmit.co/ajax/camila.disisto@humand.co', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify({
-        _subject: `Roadmap EU AI Act — ${name || email}`,
-        nombre:   name    || '(no indicado)',
-        empresa:  empresa || '(no indicada)',
-        email:    email,
-        roadmap:  ROADMAP_TEXT,
-        _template: 'table'
-      })
-    });
-  } catch (e) {
-    console.warn('Email send failed:', e);
-  }
+  // Envío en background — no bloquea el flujo de UX
+  fetch('https://formsubmit.co/ajax/camila.disisto@humand.co', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+    body: JSON.stringify({
+      _subject:  `Quiz AI Act — ${empresa} · ${nombre || email}`,
+      nombre:    nombre   || '(no indicado)',
+      empresa:   empresa,
+      email:     email,
+      roadmap:   ROADMAP_TEXT,
+      _template: 'table'
+    })
+  }).catch(e => console.warn('Send failed:', e));
 
-  btnSend.disabled = false;
-  btnSend.textContent = 'Recibir mi roadmap';
-  finalStep(email);
+  // Pausa breve para sensación de procesamiento
+  await new Promise(r => setTimeout(r, 600));
+
+  btn.disabled = false;
+  btn.textContent = 'Ver mi diagnóstico →';
+
+  afterCapture(email);
 }
 
-function finalStep(email) {
-  document.getElementById('tyEmail').textContent = email;
-  showScreen('thankyou');
+function afterCapture(email) {
+  // Inyectar confirmación de envío en pantalla de resultados
+  const note = document.getElementById('resultsRoadmapNote');
+  if (note && email) {
+    note.innerHTML = `<p class="results-cta-sub" style="margin-bottom:14px">Roadmap enviado a <strong>${email}</strong></p>`;
+  }
+  showResults();
 }
 </script>
 </body>
