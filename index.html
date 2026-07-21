@@ -413,8 +413,23 @@
       <h2>Tu diagnóstico está listo</h2>
       <p class="sub">Recibirás el roadmap de cumplimiento en tu correo.</p>
 
-      <script src="https://js.hsforms.net/forms/embed/9327816.js" defer></script>
-      <div class="hs-form-frame" data-region="na1" data-form-id="e5a4cdc7-c794-43b7-84cd-256e85a8644d" data-portal-id="9327816"></div>
+      <div id="customForm">
+        <div class="field">
+          <label for="iNombre">Nombre</label>
+          <input type="text" id="iNombre" placeholder="Tu nombre" autocomplete="given-name">
+        </div>
+        <div class="field">
+          <label for="iEmpresa">Empresa <span style="color:var(--r500);font-size:13px">*</span></label>
+          <input type="text" id="iEmpresa" placeholder="Nombre de tu empresa" autocomplete="organization">
+        </div>
+        <div class="field">
+          <label for="iEmail">Correo corporativo <span style="color:var(--r500);font-size:13px">*</span></label>
+          <input type="email" id="iEmail" placeholder="nombre@empresa.com" autocomplete="email">
+        </div>
+        <button class="btn btn-primary btn-full" style="margin-top:8px" id="btnCapture" onclick="submitCapture()">
+          Ver mi diagnóstico →
+        </button>
+      </div>
     </div>
   </div>
 </div>
@@ -753,20 +768,54 @@ Las fases 3, 4 y 5 requieren demostrar con registros concretos que la informaci�
 
 /* ══════════════════ CAPTURE FLOW ══════════════════ */
 function goCapture() {
+  const storedNombre  = localStorage.getItem('humand_nombre');
+  const storedEmpresa = localStorage.getItem('humand_empresa');
+  const storedEmail   = localStorage.getItem('humand_email');
+  if (storedNombre)   document.getElementById('iNombre').value   = storedNombre;
+  if (storedEmpresa)  document.getElementById('iEmpresa').value  = storedEmpresa;
+  if (storedEmail)    document.getElementById('iEmail').value    = storedEmail;
   document.getElementById('pbFill').style.width  = '100%';
   document.getElementById('pbLabel').textContent = 'Diagnóstico completado';
   document.getElementById('pbPct').textContent   = '100%';
   showScreen('capture');
 }
 
-// HubSpot form submission listener
-window.addEventListener('message', function(event) {
-  if (event.data && event.data.type === 'hsFormCallback' && event.data.eventName === 'onFormSubmitted') {
-    afterCapture();
-  }
-});
+async function submitCapture() {
+  const nombreEl  = document.getElementById('iNombre');
+  const empresaEl = document.getElementById('iEmpresa');
+  const emailEl   = document.getElementById('iEmail');
+  const nombre    = nombreEl.value.trim();
+  const empresa   = empresaEl.value.trim();
+  const email     = emailEl.value.trim();
+  const btn       = document.getElementById('btnCapture');
 
-function afterCapture() {
+  emailEl.classList.remove('error');
+  empresaEl.classList.remove('error');
+  let valid = true;
+  if (!empresa) { empresaEl.classList.add('error'); empresaEl.focus(); valid = false; }
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    emailEl.classList.add('error'); if (valid) emailEl.focus(); valid = false;
+  }
+  if (!valid) return;
+
+  localStorage.setItem('humand_nombre',  nombre);
+  localStorage.setItem('humand_empresa', empresa);
+  localStorage.setItem('humand_email',   email);
+
+  btn.disabled = true;
+  btn.textContent = 'Cargando diagnóstico…';
+  await new Promise(r => setTimeout(r, 600));
+  btn.disabled = false;
+  btn.textContent = 'Ver mi diagnóstico →';
+
+  afterCapture(email);
+}
+
+function afterCapture(email) {
+  const note = document.getElementById('resultsRoadmapNote');
+  if (note && email) {
+    note.innerHTML = `<p class="results-cta-sub" style="margin-bottom:14px">Roadmap enviado a <strong>${email}</strong></p>`;
+  }
   showResults();
 }
 </script>
